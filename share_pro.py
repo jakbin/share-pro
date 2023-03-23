@@ -11,7 +11,7 @@ import tkinter as tk
 from PIL import Image, ImageTk
 
 
-__version__ = "0.0.1"
+__version__ = "0.0.2"
 
 def get_ip_address(ifname):
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -31,7 +31,12 @@ DIRECTORY = os.getcwd()
 
 class Handler(http.server.SimpleHTTPRequestHandler):
     def __init__(self, *args, **kwargs):
-        super().__init__(*args, directory=DIRECTORY, **kwargs)
+        try:
+            super().__init__(*args, directory=DIRECTORY, **kwargs)
+        except ConnectionResetError:
+            pass
+        except BrokenPipeError:
+            pass
 
 class HttpServerThread(threading.Thread):
     def run(self):
@@ -45,6 +50,7 @@ class TkinterThread(threading.Thread):
     def run(self):
 
         root = tk.Tk()
+        root.title('QR Code')
 
         qr = qrcode.make(url)
 
