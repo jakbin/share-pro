@@ -1,17 +1,13 @@
-import threading
-import sys
 import os
+import sys
 import http.server
 import socketserver
 import socket
 import fcntl
 import struct
 import qrcode
-import tkinter as tk
-from PIL import Image, ImageTk
 
-
-__version__ = "0.0.2"
+__version__ = "0.0.5"
 
 def get_ip_address(ifname):
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -29,6 +25,12 @@ url = f"http://{ip}:{PORT}"
 
 DIRECTORY = os.getcwd()
 
+def show_qr():
+    print("Scan qr code to url in browser :-\n")
+    qr = qrcode.QRCode()
+    qr.add_data(url)
+    qr.print_ascii(tty=True)
+
 class Handler(http.server.SimpleHTTPRequestHandler):
     def __init__(self, *args, **kwargs):
         try:
@@ -38,52 +40,16 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         except BrokenPipeError:
             pass
 
-class HttpServerThread(threading.Thread):
-    def run(self):
-
+def run():
+    try:
+        show_qr()
         http = socketserver.TCPServer((ip, PORT), Handler)
 
         print("serving at port", f"http://{ip}:{PORT}")
         http.serve_forever()
-
-class TkinterThread(threading.Thread):
-    def run(self):
-
-        root = tk.Tk()
-        root.title('QR Code')
-
-        qr = qrcode.make(url)
-
-        # Convert the PIL Image object to a Tkinter PhotoImage object
-        img = ImageTk.PhotoImage(qr)
-
-        # Create a new Tkinter window to display the QR code
-        root.geometry("%dx%d" % (qr.size[0] + 10, qr.size[1] + 10))
-
-        # Add the QR code to a Tkinter Label widget
-        label = tk.Label(root, image=img)
-        label.image = img
-        label.pack()
-
- 
-        root.mainloop()
-
-def run():
-    # starting threads
-    http_thread = HttpServerThread()
-    http_thread.start()
-
-    tk_thread = TkinterThread()
-    tk_thread.start()
-
-    try:
-        tk_thread.join()
     except KeyboardInterrupt:
-        sys.exit()
-
-    try:
-        http_thread.join()
-    except KeyboardInterrupt:
+        print("\nStopping share-pro sever....")
+        http.server_close()
         sys.exit()
 
 if __name__ == "__main__":

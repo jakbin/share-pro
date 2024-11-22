@@ -57,7 +57,7 @@ setup(
             'share-pro=share_pro:run'
             )
         },
-    install_requires=['qrcode','Pillow'],
+    install_requires=['qrcode'],
     zip_safe=False,
     platforms='any'
 )
